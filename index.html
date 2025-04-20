@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>右上角選單</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+    <style>
+      /* 自訂樣式 */
+      body {
+        margin: 0;
+        overflow: hidden; /* 隱藏滾動條 */
+      }
+
+      .menu {
+        list-style: none;
+        justify-self: flex-end;
+        padding: 0;
+        margin: 0;
+        position: absolute; /* 改為絕對定位 */
+        top: 10px; /* 距離頂部 10px */
+        right: 10px; /* 距離右側 10px */
+        gap: 5px;
+        z-index: 3; /* 選單放在最上層 */
+      }
+
+      .menu li {
+        margin: 5px 0;
+        padding: 0 5px;
+        width: auto;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.4); /* 調整透明度 */
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .submenu {
+        list-style: none;
+        /* padding-left: 20px; */
+      }
+
+      .submenu li {
+        background-color: rgba(255, 208, 0, 0.4); /* 子選單背景顏色與作品集一致，透明度調整 */
+        margin: 5px 0;
+        padding: 0 5px;
+        width: auto;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      iframe {
+        position: absolute;
+        top: 10%;
+        left: 10%;
+        width: 80%;
+        height: 80%;
+        border: none;
+        display: none; /* 預設隱藏 */
+        z-index: 2; /* iframe 放在第二層 */
+        object-fit: contain; /* 確保內容完整顯示 */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 選單 -->
+    <ul class="menu">
+      <li onclick="hideIframe()" style="background-color: #ffb700;">回首頁</li>
+      <li onclick="loadPage('me.png')" style="background-color: #ffc300;">自我介紹</li>
+      <li style="background-color: #ffd000;">
+        作品集
+        <ul class="submenu">
+          <li onclick="loadPage('https://sunnyyyyyyyyyyyyyyyyyyyy.github.io/222/')">第一周</li>
+          <li onclick="loadPage('https://sunnyyyyyyyyyyyyyyyyyyyy.github.io/2222/')">第二周</li>
+          <li onclick="loadPage('https://sunnyyyyyyyyyyyyyyyyyyyy.github.io/3333/')">第三周</li>
+          <li onclick="loadPage('https://sunnyyyyyyyyyyyyyyyyyyyy.github.io/20250328/')">第四周</li>
+          <li onclick="loadPage('https://hackmd.io/@jO50Bwe2S1mIentFb3Sm8w/20250420')">作品說明</li>
+        </ul>
+      </li>    
+      <li onclick="loadPage(' https://sunnyyyyyyyyyyyyyyyyyyyy.github.io/0418/')" style="background-color:  #ffdd00;">測驗卷</li>
+      <li onclick="loadPage('https://cfchen58.synology.me/%E7%A8%8B%E5%BC%8F%E8%A8%AD%E8%A8%882024/A2/week1/20250221_092037.mp4')" style="background-color: #ffea00;">教學影片</li>
+      
+    </ul>
+
+    <!-- iframe -->
+    <iframe id="content-frame"></iframe>
+
+    <!-- 動畫 -->
+    <script>
+      let shapes = [];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        background('#e3d5ca'); // 設定背景顏色
+        let cols = 10; // 列數
+        let rows = 10; // 行數
+        let cellWidth = width / cols;
+        let cellHeight = height / rows;
+
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < rows; j++) {
+            let x = i * cellWidth + cellWidth / 2;
+            let y = j * cellHeight + cellHeight / 2;
+            let size = random(30, 80);
+            let shapeType = random(['circle', 'rect', 'triangle']);
+            let baseColor = color(random(100, 255), random(100, 255), random(100, 255), 200);
+            shapes.push({
+              x,
+              y,
+              size,
+              shapeType,
+              baseColor,
+              color: baseColor, // 初始顏色
+            });
+          }
+        }
+      }
+
+      function draw() {
+        background('#e3d5ca'); // 重繪背景
+        noStroke();
+        for (let shape of shapes) {
+          // 計算滑鼠與形狀的相對位置
+          let distanceX = mouseX / width;
+          let distanceY = mouseY / height;
+
+          // 根據滑鼠位置調整大小和顏色
+          let sizeFactor = (1 - distanceX - distanceY) * 0.5; // 放大或縮小比例
+          let newSize = shape.size * (1 + sizeFactor); // 調整大小
+          let newColor = lerpColor(
+            shape.baseColor,
+            color(0, 0, 0, 50), // 深色
+            constrain(sizeFactor, -0.5, 0.5) // 限制顏色變化範圍
+          );
+
+          fill(newColor);
+          shape.color = newColor; // 更新顏色
+          if (shape.shapeType === 'circle') {
+            ellipse(shape.x, shape.y, newSize);
+          } else if (shape.shapeType === 'rect') {
+            rectMode(CENTER);
+            rect(shape.x, shape.y, newSize, newSize);
+          } else if (shape.shapeType === 'triangle') {
+            let halfSize = newSize / 2;
+            triangle(
+              shape.x, shape.y - halfSize,
+              shape.x - halfSize, shape.y + halfSize,
+              shape.x + halfSize, shape.y + halfSize
+            );
+          }
+        }
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        shapes = []; // 重置形狀
+        setup(); // 重新生成形狀
+      }
+
+      // 動態載入 iframe 網頁或影片
+      function loadPage(url) {
+        const iframe = document.getElementById('content-frame');
+        if (iframe) {
+          iframe.src = url;
+          iframe.style.display = 'block';
+
+          // 如果是 me.png，設定圖片大小
+          iframe.onload = () => {
+            if (url === 'me.png') {
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+              const img = iframeDoc.querySelector('img');
+              if (img) {
+                img.style.width = '100%'; // 設定圖片寬度為父容器寬度
+                img.style.height = 'auto'; // 自動調整高度
+              }
+            }
+          };
+        }
+      }
+
+      // 隱藏 iframe
+      function hideIframe() {
+        const iframe = document.getElementById('content-frame');
+        if (iframe) {
+          iframe.style.display = 'none';
+        }
+      }
+    </script>
+  </body>
+</html>
